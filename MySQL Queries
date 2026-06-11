@@ -1,0 +1,120 @@
+DROP TABLE IF EXISTS Books;
+CREATE TABLE Books(
+Book_ID serial primary key,
+Title varchar(100),
+Author varchar(100),
+Genre varchar(50),
+Published_Year int,
+Price numeric(10,2), 
+Stock int
+);
+
+DROP TABLE IF EXISTS Customers;
+CREATE TABLE Customers(
+Customer_ID serial primary key,
+Name varchar(100),
+Email varchar(100),
+Phone varchar(15),
+City varchar(50),
+Country varchar(150)
+);
+
+DROP TABLE IF EXISTS Orders;
+CREATE TABLE Orders(
+Order_ID serial primary key,
+Customer_ID int references Customers(Customer_ID),
+Book_ID int references Books(Book_ID),
+Order_Date Date,
+Quantity int,
+Total_Amount numeric(10, 2)
+);
+
+Select * from Books;
+Select * from Customers;
+Select * from Orders;
+
+-- -basic questions--------
+
+SELECT * FROM Books WHERE Genre = 'Fiction';
+SELECT * FROM Books WHERE Published_Year>1950;
+SELECT * FROM Customers WHERE Country='Canada';
+SELECT * FROM Orders WHERE Order_Date BETWEEN '2023-11-01' AND '2023-11-30';
+SELECT SUM(Stock) AS TOTAL_STOCK, COUNT(Book_ID) AS TOTAL_BOOKS FROM Books;
+SELECT * FROM BOOKS ORDER BY Price DESC LIMIT 1; 
+SELECT Order_ID FROM Orders WHERE Quantity>1;
+SELECT * FROM Orders WHERE Total_Amount>20;
+SELECT DISTINCT Genre FROM Books;
+SELECT DISTINCT Author AS authors FROM Books;
+SELECT * FROM Books ORDER BY Stock ASC;
+SELECT SUM(Total_Amount) as revenue_generated FROM Orders;
+
+-- Advance Questions : 
+
+-- 1) Retrieve the total number of books sold for each genre:
+
+SELECT b.Genre, SUM(o.Quantity) as Total_Quantity 
+FROM Orders o
+JOIN Books b ON b.Book_ID = o.Book_ID
+GROUP BY b.Genre;
+
+ -- 2) Find the average price of books in the "Fantasy" genre:
+ 
+ SELECT AVG(Price) AS avg_price 
+ FROM books WHERE Genre = 'Fantasy';
+ 
+ -- 3) List customers who have placed at least 2 orders:
+ 
+ SELECT c.Name, o.Customer_ID, COUNT(o.Order_ID) 
+ FROM Orders o 
+ JOIN Customers c ON c.Customer_ID = o.Customer_ID
+ GROUP BY Customer_ID 
+ HAVING COUNT(Order_ID) >= 2;
+
+-- 4) Find the most frequently ordered book:
+
+ SELECT b.Title, o.Book_ID, COUNT(o.Order_ID) AS ORDER_COUNT
+ FROM Orders o
+ JOIN Books b ON b.Book_ID = o.Book_Id
+ GROUP BY Book_ID 
+ ORDER BY ORDER_COUNT DESC;
+
+-- 5) Show the top 3 most expensive books of 'Fantasy' Genre 
+
+ SELECT Title,Genre, Price FROM Books 
+ WHERE Genre = 'Fantasy'
+ ORDER BY Price DESC LIMIT 3;
+
+-- 6) Retrieve the total quantity of books sold by each author:
+
+ SELECT b.Author, SUM(o.Quantity) AS Total_sold_books
+ FROM Orders o
+ JOIN Books b ON b.Book_ID = o.Book_ID
+ GROUP BY b.Author;
+
+-- 7) List the cities where customers who spent over $30 are located:
+
+ SELECT DISTINCT c.CITY, Total_Amount
+ FROM Orders o
+ JOIN Customers c On c.Customer_ID = o.Customer_ID
+ WHERE o.Total_Amount > 30;
+
+-- 8) Find the customer who spent the most on orders:
+
+ SELECT c.Customer_ID, c.Name, SUM(o.Total_Amount) AS Amount_Spent
+ FROM Customers c
+ JOIN Orders o ON c.Customer_ID = o.Customer_ID
+ Group BY c.Customer_ID, c.Name
+ ORDER BY Amount_Spent DESC; 
+
+-- 9) Calculate the stock remaining after fulfilling all orders:
+
+SELECT b.Book_ID, b.Title, b.Stock, COALESCE(SUM(o.Quantity),0) AS Order_Quantity,
+b.Stock - COALESCE(SUM(o.Quantity),0) AS Remaining_Quantity
+FROM Books b
+LEFT JOIN Orders o ON b.Book_ID = o.Order_ID
+GROUP BY Book_ID ORDER BY Book_ID;
+
+
+
+
+
